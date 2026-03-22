@@ -1,0 +1,15 @@
+{
+  "name": "lumio-api",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4",
+    "@anthropic-ai/sdk": "^0.39",
+    "cors": "^2",
+    "dotenv": "^16"
+  }
+}
