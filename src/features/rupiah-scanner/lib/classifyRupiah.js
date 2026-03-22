@@ -1,4 +1,4 @@
-import { callClaude } from '../../../core/lib/anthropic';
+import { callClaude } from "../../../core/lib/anthropic";
 
 export async function classifyRupiah(base64Image) {
   const prompt = `Kamu adalah sistem klasifikasi uang rupiah Indonesia.
@@ -15,35 +15,40 @@ Kalau bukan uang rupiah atau tidak terlihat jelas, gunakan tidak-terdeteksi.`;
 
   try {
     const response = await callClaude(base64Image, prompt);
-    let resultText = '';
-    
-    if (typeof response === 'string') {
-      resultText = response;
-    } else if (response && typeof response === 'object') {
-      // In case the JSON returns { response: '...json...' } or similar
-      resultText = JSON.stringify(response); 
-      // or if there's a specific field like response.text or response.content
-      if (response.text) resultText = response.text;
-      else if (response.content) resultText = response.content;
-      else if (response.message) resultText = response.message;
-    }
+
+    // API proxy return { result, model, usage }
+    const resultText =
+      response.result ||
+      response.text ||
+      response.content ||
+      response.message ||
+      JSON.stringify(response);
 
     const match = resultText.match(/\{[\s\S]*\}/);
     if (!match) throw new Error("No JSON found");
-    
+
     const parsed = JSON.parse(match[0]);
     const validNominals = [
-      'seribu', 'dua-ribu', 'lima-ribu', 'sepuluh-ribu', 
-      'dua-puluh-ribu', 'lima-puluh-ribu', 'seratus-ribu', 'tidak-terdeteksi'
+      "seribu",
+      "dua-ribu",
+      "lima-ribu",
+      "sepuluh-ribu",
+      "dua-puluh-ribu",
+      "lima-puluh-ribu",
+      "seratus-ribu",
+      "tidak-terdeteksi",
     ];
-    
+
     if (validNominals.includes(parsed.nominal)) {
-      return { nominal: parsed.nominal, confidence: parsed.confidence || 'low' };
+      return {
+        nominal: parsed.nominal,
+        confidence: parsed.confidence || "low",
+      };
     }
-    
-    throw new Error('Invalid nominal value');
+
+    throw new Error("Invalid nominal value");
   } catch (error) {
-    console.error('Classification error:', error);
-    return { nominal: 'tidak-terdeteksi', confidence: 'low' };
+    console.error("Classification error:", error);
+    return { nominal: "tidak-terdeteksi", confidence: "low" };
   }
 }
