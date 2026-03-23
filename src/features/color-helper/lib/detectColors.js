@@ -13,7 +13,6 @@ Jawab HANYA dengan JSON array berikut tanpa teks lain:
     "percentage": 35
   }
 ]
-
 Rules:
 - nameId: nama warna dalam Bahasa Indonesia yang deskriptif
 - nameEn: nama warna dalam Bahasa Inggris
@@ -26,15 +25,15 @@ Rules:
   try {
     const response = await callClaude(base64Image, prompt);
 
-    // response could be an object with a text field or raw text
-    let text = typeof response === 'string' ? response : (response.text || response.content || JSON.stringify(response));
+    // handle response.result dari API proxy (sama seperti classifyRupiah)
+    let text = typeof response === 'string'
+      ? response
+      : (response.result || response.text || response.content || JSON.stringify(response));
 
-    // Try to extract JSON array from the response
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
       return JSON.parse(match[0]);
     }
-
     return JSON.parse(text);
   } catch (err) {
     console.error('detectColors parse error:', err);
