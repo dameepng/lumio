@@ -23,20 +23,29 @@ Rules:
 - Urutkan dari persentase terbesar ke terkecil`;
 
   try {
+    console.log('detectColors called, image length:', base64Image?.length);
+
     const response = await callClaude(base64Image, prompt);
 
-    // handle response.result dari API proxy (sama seperti classifyRupiah)
+    console.log('detectColors raw response:', JSON.stringify(response).substring(0, 300));
+
     let text = typeof response === 'string'
       ? response
       : (response.result || response.text || response.content || JSON.stringify(response));
 
+    console.log('detectColors text:', text.substring(0, 300));
+
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
-      return JSON.parse(match[0]);
+      const parsed = JSON.parse(match[0]);
+      console.log('detectColors parsed:', parsed);
+      return Array.isArray(parsed) ? parsed : [];
     }
-    return JSON.parse(text);
+
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
-    console.error('detectColors parse error:', err);
+    console.error('detectColors error:', err);
     return [];
   }
 }
