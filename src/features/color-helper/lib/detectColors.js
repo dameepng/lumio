@@ -23,22 +23,18 @@ Rules:
 - Urutkan dari persentase terbesar ke terkecil`;
 
   try {
-    console.log('detectColors called, image length:', base64Image?.length);
-
     const response = await callClaude(base64Image, prompt);
-
-    console.log('detectColors raw response:', JSON.stringify(response).substring(0, 300));
 
     let text = typeof response === 'string'
       ? response
       : (response.result || response.text || response.content || JSON.stringify(response));
 
-    console.log('detectColors text:', text.substring(0, 300));
+    // Strip markdown code fences
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
       const parsed = JSON.parse(match[0]);
-      console.log('detectColors parsed:', parsed);
       return Array.isArray(parsed) ? parsed : [];
     }
 

@@ -21,10 +21,10 @@ const anthropic = new Anthropic({
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    service: 'lumio-api', 
-    timestamp: new Date().toISOString() 
+  res.json({
+    status: 'ok',
+    service: 'lumio-api',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -32,17 +32,17 @@ app.get('/health', (req, res) => {
 app.post('/api/classify', async (req, res) => {
   try {
     const { image, prompt } = req.body;
-    
+
     if (!image) return res.status(400).json({ error: 'image required' });
     if (!prompt) return res.status(400).json({ error: 'prompt required' });
-    
+
     if (image.length > 5 * 1024 * 1024) {
       return res.status(413).json({ error: 'image too large' });
     }
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 100,
+      max_tokens: 1000,
       messages: [{
         role: 'user',
         content: [
@@ -68,7 +68,7 @@ app.post('/api/classify', async (req, res) => {
       model: response.model,
       usage: response.usage
     });
-    
+
   } catch (error) {
     if (error instanceof Anthropic.APIError) {
       console.error('Anthropic Error:', error);
