@@ -14,7 +14,7 @@ export default function Home() {
       title: "Color Helper",
       description: "Bantu buta warna kenali warna",
       href: "/color-helper",
-      available: false
+      available: true
     },
     {
       icon: "🔤",
