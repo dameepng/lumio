@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useColorDetection } from './hooks/useColorDetection';
 import ColorViewfinder from './components/ColorViewfinder';
@@ -13,49 +13,34 @@ function getBrightness(hex) {
 
 export default function ColorHelper() {
   const navigate = useNavigate();
-  const { videoRef, isReady, colors, isScanning, startDetection, stopDetection } = useColorDetection();
-  const [isActive, setIsActive] = useState(false);
-  const prevColorNamesRef = useRef([]);
+  const { videoRef, isReady, colors, isScanning, capturedImage, scanColors, resetScan } = useColorDetection();
 
-  // Cleanup on unmount
+  // Cleanup speech on unmount
   useEffect(() => {
     return () => {
-      stopDetection();
       speechSynthesis.cancel();
     };
-  }, [stopDetection]);
+  }, []);
 
   // Audio feedback via Web Speech API
   useEffect(() => {
-    if (!isActive || colors.length === 0) return;
+    if (colors.length === 0) return;
 
-    const currentNames = colors.map(c => c.nameId);
-    const prevNames = prevColorNamesRef.current;
-
-    // Debounce: only speak if color names changed
-    const isSame = currentNames.length === prevNames.length &&
-      currentNames.every((name, i) => name === prevNames[i]);
-
-    if (isSame) return;
-
-    prevColorNamesRef.current = currentNames;
-
-    const text = 'Terdeteksi: ' + currentNames.join(', ');
+    const text = 'Terdeteksi: ' + colors.map(c => c.nameId).join(', ');
     speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = 'id-ID';
     utt.rate = 0.9;
     speechSynthesis.speak(utt);
-  }, [colors, isActive]);
+  }, [colors]);
 
-  const handleToggle = () => {
-    if (isActive) {
-      stopDetection();
-      setIsActive(false);
-      speechSynthesis.cancel();
+  const handleScan = () => {
+    if (capturedImage) {
+      resetScan();
+      // Small delay to let camera re-render before capturing
+      setTimeout(() => scanColors(), 300);
     } else {
-      startDetection();
-      setIsActive(true);
+      scanColors();
     }
   };
 
@@ -82,25 +67,23 @@ export default function ColorHelper() {
           isReady={isReady}
           isScanning={isScanning}
           colors={colors}
+          capturedImage={capturedImage}
+          onReset={resetScan}
         />
       </div>
 
       {/* Bottom Panel */}
       <div className="bg-[#111] p-6 shrink-0 z-30 relative">
-        {/* Toggle Button */}
+        {/* Main button */}
         <button
-          onClick={handleToggle}
-          disabled={!isReady}
-          className={`w-full h-[72px] rounded-2xl text-[18px] font-medium transition-all active:opacity-80 disabled:opacity-50 ${
-            isActive
-              ? 'bg-[#ef4444] text-white'
-              : 'bg-white text-black'
-          }`}
+          onClick={handleScan}
+          disabled={isScanning || !isReady}
+          className="w-full h-[72px] rounded-2xl bg-white text-black text-[18px] font-medium disabled:opacity-50 transition-opacity active:opacity-80"
         >
-          {isActive ? 'Stop' : 'Mulai Deteksi'}
+          {isScanning ? 'Menganalisis...' : capturedImage ? 'Scan Ulang' : 'Scan Warna'}
         </button>
 
-        {/* Color List */}
+        {/* Color pills */}
         {colors.length > 0 && (
           <div className="mt-4 flex flex-row flex-wrap gap-2">
             {colors.map((color, idx) => {

@@ -1,88 +1,68 @@
-import { useRef, useEffect } from 'react';
-
 const AREA_MAP = {
-  'kiri atas':   { x: 0.05, y: 0.05, w: 0.40, h: 0.40 },
-  'kanan atas':  { x: 0.55, y: 0.05, w: 0.40, h: 0.40 },
-  'tengah':      { x: 0.25, y: 0.30, w: 0.50, h: 0.40 },
-  'kiri bawah':  { x: 0.05, y: 0.55, w: 0.40, h: 0.40 },
-  'kanan bawah': { x: 0.55, y: 0.55, w: 0.40, h: 0.40 },
+  'kiri atas':   { top: '5%', left: '5%', width: '38%', height: '38%' },
+  'kanan atas':  { top: '5%', right: '5%', width: '38%', height: '38%' },
+  'tengah':      { top: '30%', left: '25%', width: '50%', height: '38%' },
+  'kiri bawah':  { top: '57%', left: '5%', width: '38%', height: '38%' },
+  'kanan bawah': { top: '57%', right: '5%', width: '38%', height: '38%' },
 };
 
-export default function ColorOverlay({ colors, videoWidth, videoHeight }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const parent = canvas.parentElement;
-    const displayW = parent?.clientWidth || videoWidth || 320;
-    const displayH = parent?.clientHeight || videoHeight || 240;
-
-    canvas.width = displayW;
-    canvas.height = displayH;
-
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, displayW, displayH);
-
-    if (!colors || colors.length === 0) return;
-
-    colors.forEach((color) => {
-      const area = AREA_MAP[color.area] || AREA_MAP['tengah'];
-
-      const x = area.x * displayW;
-      const y = area.y * displayH;
-      const w = area.w * displayW;
-      const h = area.h * displayH;
-
-      // Border rect
-      ctx.strokeStyle = color.hex;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
-
-      // Color swatch 24x24 at top-left of box
-      ctx.fillStyle = color.hex;
-      ctx.fillRect(x, y, 24, 24);
-
-      // Label background
-      const label = `${color.nameId} / ${color.nameEn}`;
-      ctx.font = '12px sans-serif';
-      const labelMetrics = ctx.measureText(label);
-      const labelW = labelMetrics.width + 8;
-      const labelH = 18;
-      const labelX = x + 28;
-      const labelY = y;
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(labelX, labelY, labelW, labelH);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(label, labelX + 4, labelY + 13);
-
-      // Percentage text below label
-      const pctText = `${color.percentage}%`;
-      const pctMetrics = ctx.measureText(pctText);
-      const pctW = pctMetrics.width + 8;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(labelX, labelY + labelH, pctW, 16);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '11px sans-serif';
-      ctx.fillText(pctText, labelX + 4, labelY + labelH + 12);
-    });
-  }, [colors, videoWidth, videoHeight]);
+export default function ColorOverlay({ colors }) {
+  if (!colors || colors.length === 0) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-      }}
-    />
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      {colors.map((color, idx) => {
+        const pos = AREA_MAP[color.area] || AREA_MAP['tengah'];
+        return (
+          <div
+            key={idx}
+            style={{
+              position: 'absolute',
+              ...pos,
+              border: `2px solid ${color.hex}`,
+              borderRadius: '4px',
+            }}
+          >
+            {/* Label above box */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                transform: 'translateY(-100%)',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(0,0,0,0.8)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: color.hex,
+                  border: '1px solid white',
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: '11px', color: 'white', fontWeight: 500 }}>
+                {color.nameId}
+              </span>
+              <span style={{ fontSize: '10px', color: 'white', opacity: 0.6 }}>
+                ({color.nameEn})
+              </span>
+              <span style={{ fontSize: '10px', color: 'white', opacity: 0.75 }}>
+                {color.percentage}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
