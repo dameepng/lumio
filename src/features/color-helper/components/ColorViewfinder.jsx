@@ -1,81 +1,129 @@
 import ColorOverlay from './ColorOverlay';
 
-export default function ColorViewfinder({ videoRef, isReady, isScanning, colors, capturedImage, onReset }) {
+export default function ColorViewfinder({ videoRef, isReady, isScanning, result, capturedImage, onReset }) {
+  const cornerStyle = (top, left, bottom, right) => ({
+    position: 'absolute',
+    width: '24px',
+    height: '24px',
+    borderColor: 'rgba(255,255,255,0.7)',
+    borderStyle: 'solid',
+    borderWidth: 0,
+    ...(top !== undefined && { top, borderTopWidth: '3px' }),
+    ...(bottom !== undefined && { bottom, borderBottomWidth: '3px' }),
+    ...(left !== undefined && { left, borderLeftWidth: '3px' }),
+    ...(right !== undefined && { right, borderRightWidth: '3px' }),
+    borderRadius: top !== undefined && left !== undefined ? '8px 0 0 0'
+      : top !== undefined && right !== undefined ? '0 8px 0 0'
+      : bottom !== undefined && left !== undefined ? '0 0 0 8px'
+      : '0 0 8px 0',
+  });
+
+  const scanningOverlay = isScanning && (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(0,0,0,0.6)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+      }}
+    >
+      <div
+        style={{
+          width: '32px',
+          height: '32px',
+          border: '4px solid white',
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+        }}
+      />
+      <span style={{ color: '#fff', fontSize: '14px', opacity: 0.7 }}>Menganalisis...</span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  // MODE HASIL
+  if (capturedImage) {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '60vh',
+          background: '#000',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={`data:image/jpeg;base64,${capturedImage}`}
+          alt="Captured"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <ColorOverlay result={result} />
+        {scanningOverlay}
+        <button
+          onClick={onReset}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            left: '12px',
+            background: 'rgba(0,0,0,0.5)',
+            color: '#fff',
+            fontSize: '12px',
+            padding: '6px 12px',
+            borderRadius: '9999px',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          ← Scan ulang
+        </button>
+      </div>
+    );
+  }
+
+  // MODE KAMERA
   return (
-    <div className="relative w-full h-[60vh] bg-black flex items-center justify-center overflow-hidden">
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '60vh',
+        background: '#000',
+        overflow: 'hidden',
+      }}
+    >
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      />
+      {/* Corner brackets */}
+      <div style={cornerStyle(16, 16)} />
+      <div style={cornerStyle(16, undefined, undefined, 16)} />
+      <div style={cornerStyle(undefined, 16, 16)} />
+      <div style={cornerStyle(undefined, undefined, 16, 16)} />
 
-      {/* === MODE KAMERA === */}
-      {capturedImage === null && (
-        <>
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-cover absolute top-0 left-0"
-          />
+      {scanningOverlay}
 
-          {/* Loading spinner */}
-          {!isReady && (
-            <div className="absolute z-10 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-
-          {/* Corner brackets */}
-          <div className="absolute top-8 left-8 w-10 h-10 border-t-4 border-l-4 border-white z-10"></div>
-          <div className="absolute top-8 right-8 w-10 h-10 border-t-4 border-r-4 border-white z-10"></div>
-          <div className="absolute bottom-16 left-8 w-10 h-10 border-b-4 border-l-4 border-white z-10"></div>
-          <div className="absolute bottom-16 right-8 w-10 h-10 border-b-4 border-r-4 border-white z-10"></div>
-
-          {/* Scanning overlay */}
-          {isScanning && (
-            <div className="absolute inset-0 bg-black/50 z-20 flex flex-col items-center justify-center gap-3">
-              <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-white text-sm font-medium">Menganalisis warna...</p>
-            </div>
-          )}
-
-          {/* Bottom instruction */}
-          <div className="absolute bottom-6 left-0 w-full text-center z-10 pointer-events-none">
-            <p className="text-white text-sm opacity-50 font-medium">
-              Arahkan ke objek, lalu tap Scan Warna
-            </p>
-          </div>
-        </>
-      )}
-
-      {/* === MODE HASIL === */}
-      {capturedImage !== null && (
-        <>
-          <img
-            src={`data:image/jpeg;base64,${capturedImage}`}
-            alt="Captured"
-            className="w-full h-full object-cover absolute top-0 left-0"
-          />
-
-          {/* Color overlay on top of captured image */}
-          <ColorOverlay colors={colors} />
-
-          {/* Badge top-right */}
-          {colors.length > 0 && (
-            <div className="absolute top-4 right-4 z-10">
-              <span className="text-white text-sm bg-black/40 px-3 py-1 rounded-full">
-                {colors.length} warna terdeteksi
-              </span>
-            </div>
-          )}
-
-          {/* Reset button top-left */}
-          <button
-            onClick={onReset}
-            className="absolute top-4 left-4 z-10 bg-black/50 text-white px-3 py-1 rounded-full hover:bg-black/70 transition-colors"
-            style={{ fontSize: '12px' }}
-          >
-            ← Scan ulang
-          </button>
-        </>
-      )}
+      <span
+        style={{
+          position: 'absolute',
+          bottom: '16px',
+          width: '100%',
+          textAlign: 'center',
+          color: 'rgba(255,255,255,0.4)',
+          fontSize: '14px',
+        }}
+      >
+        Foto objek untuk kenali warnanya
+      </span>
     </div>
   );
 }

@@ -1,68 +1,76 @@
-const AREA_MAP = {
-  'kiri atas':   { top: '5%', left: '5%', width: '38%', height: '38%' },
-  'kanan atas':  { top: '5%', right: '5%', width: '38%', height: '38%' },
-  'tengah':      { top: '30%', left: '25%', width: '50%', height: '38%' },
-  'kiri bawah':  { top: '57%', left: '5%', width: '38%', height: '38%' },
-  'kanan bawah': { top: '57%', right: '5%', width: '38%', height: '38%' },
-};
-
-export default function ColorOverlay({ colors }) {
-  if (!colors || colors.length === 0) return null;
+export default function ColorOverlay({ result }) {
+  if (!result) return null;
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-      {colors.map((color, idx) => {
-        const pos = AREA_MAP[color.area] || AREA_MAP['tengah'];
-        return (
-          <div
-            key={idx}
+      {/* Bottom gradient info panel */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.9))',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '12px',
+        }}
+      >
+        {/* Color swatch */}
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '12px',
+            background: result.hex,
+            border: '2px solid rgba(255,255,255,0.3)',
+            flexShrink: 0,
+          }}
+        />
+
+        {/* Text info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span
             style={{
-              position: 'absolute',
-              ...pos,
-              border: `2px solid ${color.hex}`,
-              borderRadius: '4px',
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.6)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
             }}
           >
-            {/* Label above box */}
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                transform: 'translateY(-100%)',
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'rgba(0,0,0,0.8)',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: color.hex,
-                  border: '1px solid white',
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ fontSize: '11px', color: 'white', fontWeight: 500 }}>
-                {color.nameId}
-              </span>
-              <span style={{ fontSize: '10px', color: 'white', opacity: 0.6 }}>
-                ({color.nameEn})
-              </span>
-              <span style={{ fontSize: '10px', color: 'white', opacity: 0.75 }}>
-                {color.percentage}%
-              </span>
-            </div>
-          </div>
-        );
-      })}
+            {result.object}
+          </span>
+          <span
+            style={{
+              fontSize: '24px',
+              fontWeight: 500,
+              color: '#fff',
+              lineHeight: 1,
+            }}
+          >
+            {result.nameId}
+          </span>
+          <span
+            style={{
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.5)',
+            }}
+          >
+            {result.nameEn}
+          </span>
+          <span
+            style={{
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.4)',
+              fontFamily: 'monospace',
+            }}
+          >
+            {result.hex}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,38 +1,37 @@
-import { useState, useCallback } from 'react';
 import { useCamera } from '../../rupiah-scanner/hooks/useCamera';
 import { detectColors } from '../lib/detectColors';
+import { useState, useCallback } from 'react';
 
 export function useColorDetection() {
   const { videoRef, isReady, error, captureFrame } = useCamera();
-  const [colors, setColors] = useState([]);
+  const [result, setResult] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
 
   const scanColors = useCallback(async () => {
     if (isScanning || !isReady) return;
     setIsScanning(true);
-    setColors([]);
+    setResult(null);
     setCapturedImage(null);
 
     try {
       const base64 = captureFrame();
       if (!base64) throw new Error('Capture failed');
-
       setCapturedImage(base64);
-      const result = await detectColors(base64);
-      setColors(result);
+      const data = await detectColors(base64);
+      setResult(data);
     } catch (err) {
-      console.error('Color detection error:', err);
-      setColors([]);
+      console.error('Scan error:', err);
+      setResult(null);
     } finally {
       setIsScanning(false);
     }
   }, [isScanning, isReady, captureFrame]);
 
   const resetScan = useCallback(() => {
-    setColors([]);
+    setResult(null);
     setCapturedImage(null);
   }, []);
 
-  return { videoRef, isReady, error, colors, isScanning, capturedImage, scanColors, resetScan };
+  return { videoRef, isReady, error, result, isScanning, capturedImage, scanColors, resetScan };
 }
